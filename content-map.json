@@ -1,0 +1,103 @@
+{
+  "sections": [
+    {
+      "id": "01",
+      "folder": "01_Gioi-thieu",
+      "title": "Phần 1 – Giới thiệu",
+      "lessons": [
+        { "id": "1.1", "file": "1.1_Gioi-thieu-Pano2VR.md",      "title": "1.1 – Giới thiệu Pano2VR" },
+        { "id": "1.2", "file": "1.2_Cai-dat-va-khoi-dong.md",    "title": "1.2 – Cài đặt và khởi động" },
+        { "id": "1.3", "file": "1.3_Co-gi-moi-Whats-New.md",     "title": "1.3 – Có gì mới (What's New)" }
+      ]
+    },
+    {
+      "id": "02",
+      "folder": "02_Workspace",
+      "title": "Phần 2 – Workspace",
+      "lessons": [
+        { "id": "2.1", "file": "2.1_Tong-quan-Workspace.md",      "title": "2.1 – Tổng quan Workspace" },
+        { "id": "2.2", "file": "2.2_Tour-Browser.md",             "title": "2.2 – Tour Browser" },
+        { "id": "2.3", "file": "2.3_Viewer.md",                   "title": "2.3 – Viewer" },
+        { "id": "2.4", "file": "2.4_Viewer-Modes.md",             "title": "2.4 – Viewer Modes" },
+        { "id": "2.5", "file": "2.5_Toolbar-va-Menu.md",          "title": "2.5 – Toolbar và Menu" },
+        { "id": "2.6", "file": "2.6_Properties-Panel.md",         "title": "2.6 – Properties Panel" },
+        { "id": "2.7", "file": "2.7_Output-Panel.md",             "title": "2.7 – Output Panel" },
+        { "id": "2.8", "file": "2.8_List-View-va-History.md",     "title": "2.8 – List View và History" },
+        { "id": "2.9", "file": "2.9_Settings-Preferences.md",     "title": "2.9 – Settings / Preferences" }
+      ]
+    },
+    {
+      "id": "03",
+      "folder": "03_Workflow-Co-ban",
+      "title": "Phần 3 – Workflow Cơ bản",
+      "lessons": [
+        { "id": "3.1", "file": "3.1_Quy-trinh-tao-tour-tu-dau-den-cuoi.md",        "title": "3.1 – Quy trình tạo tour từ đầu đến cuối" },
+        { "id": "3.2", "file": "3.2_Chuan-bi-anh-dau-vao.md",                       "title": "3.2 – Chuẩn bị ảnh đầu vào" },
+        { "id": "3.3", "file": "3.3_Tao-project-va-import-node.md",                 "title": "3.3 – Tạo project và import node" },
+        { "id": "3.4", "file": "3.4_Dat-ten-node-va-user-data.md",                  "title": "3.4 – Đặt tên node và user data" },
+        { "id": "3.5", "file": "3.5_Initial-View-va-North-Offset.md",               "title": "3.5 – Initial View và North Offset" },
+        { "id": "3.6", "file": "3.6_Patching-va-xu-ly-vung-loi.md",                 "title": "3.6 – Patching và xử lý vùng lỗi" },
+        { "id": "3.7", "file": "3.7_Preview-va-kiem-tra-tour.md",                   "title": "3.7 – Preview và kiểm tra tour" },
+        { "id": "3.8", "file": "3.8_Local-server-va-test-tren-browser.md",          "title": "3.8 – Local server và test trên browser" },
+        { "id": "3.9", "file": "3.9_Checklist-truoc-khi-sang-hotspot-va-skin.md",  "title": "3.9 – Checklist trước khi sang Hotspot & Skin" }
+      ]
+    },
+    {
+      "id": "04",
+      "folder": "04_Hotspots",
+      "title": "Phần 4 – Hotspots",
+      "lessons": [
+        { "id": "4.1", "file": "4.1_Tong-quan-Hotspots.md",              "title": "4.1 – Tổng quan Hotspots" },
+        { "id": "4.2", "file": "4.2_Point-Hotspots.md",                  "title": "4.2 – Point Hotspots" },
+        { "id": "4.3", "file": "4.3_Polygon-Hotspots.md",                "title": "4.3 – Polygon Hotspots" },
+        { "id": "4.4", "file": "4.4_Automatic-Linking.md",               "title": "4.4 – Automatic Linking" },
+        { "id": "4.5", "file": "4.5_Info-URL-va-quy-uoc-dat-hotspot.md", "title": "4.5 – Info, URL và quy ước đặt hotspot" }
+      ]
+    },
+    {
+      "id": "05",
+      "folder": "05_Skin-va-Giao-dien",
+      "title": "Phần 5 – Skin và Giao diện",
+      "lessons": [
+        { "id": "5.1", "file": "5.1_Tong-quan-Skin-Editor.md",                       "title": "5.1 – Tổng quan Skin Editor" },
+        { "id": "5.2", "file": "5.2_Cac-element-co-ban-trong-skin.md",               "title": "5.2 – Các element cơ bản trong skin" },
+        { "id": "5.3", "file": "5.3_Them-logo-title-va-thumbnails.md",               "title": "5.3 – Thêm logo, title và thumbnails" },
+        { "id": "5.4", "file": "5.4_Logic-hien-an-va-popup-thong-tin.md",            "title": "5.4 – Logic hiện/ẩn và popup thông tin" },
+        { "id": "5.5", "file": "5.5_Nguyen-tac-thiet-ke-skin-de-doc-va-de-dung.md", "title": "5.5 – Nguyên tắc thiết kế skin dễ đọc" }
+      ]
+    },
+    {
+      "id": "06",
+      "folder": "06_Export",
+      "title": "Phần 6 – Export",
+      "lessons": [
+        { "id": "6.1", "file": "6.1_Tong-quan-cac-loai-Output.md",    "title": "6.1 – Tổng quan các loại Output" },
+        { "id": "6.2", "file": "6.2_Web-Output-HTML5.md",              "title": "6.2 – Web Output HTML5" },
+        { "id": "6.3", "file": "6.3_Tiles-chat-luong-va-hieu-nang.md","title": "6.3 – Tiles, chất lượng và hiệu năng" },
+        { "id": "6.4", "file": "6.4_Transformation-Output.md",         "title": "6.4 – Transformation Output" },
+        { "id": "6.5", "file": "6.5_Animation-va-VR-Output.md",        "title": "6.5 – Animation và VR Output" },
+        { "id": "6.6", "file": "6.6_Cloud-Package-va-trien-khai.md",   "title": "6.6 – Cloud Package và triển khai" },
+        { "id": "6.7", "file": "6.7_Checklist-ban-giao-output.md",     "title": "6.7 – Checklist bàn giao output" }
+      ]
+    },
+    {
+      "id": "07",
+      "folder": "07_Nang-cao",
+      "title": "Phần 7 – Nâng cao",
+      "lessons": [
+        { "id": "7.1",  "file": "7.1_Tour-Map-va-ban-do.md",                                   "title": "7.1 – Tour Map và bản đồ" },
+        { "id": "7.2",  "file": "7.2_Patching-nang-cao.md",                                    "title": "7.2 – Patching nâng cao" },
+        { "id": "7.3",  "file": "7.3_Video-360-va-180.md",                                     "title": "7.3 – Video 360 và 180" },
+        { "id": "7.4",  "file": "7.4_Da-ngon-ngu-Translation.md",                              "title": "7.4 – Đa ngôn ngữ / Translation" },
+        { "id": "7.5",  "file": "7.5_Animation-Editor.md",                                     "title": "7.5 – Animation Editor" },
+        { "id": "7.6",  "file": "7.6_Node-Markers-va-Skin.md",                                 "title": "7.6 – Node Markers và Skin" },
+        { "id": "7.7",  "file": "7.7_Meo-va-tham-chieu-nang-cao.md",                           "title": "7.7 – Mẹo và tham chiếu nâng cao" },
+        { "id": "7.8",  "file": "7.8_Tinh-nang-video-nang-cao-tracking-va-subtitles.md",       "title": "7.8 – Video nâng cao: tracking & subtitles" },
+        { "id": "7.9",  "file": "7.9_Action-Filters-trong-Skin.md",                            "title": "7.9 – Action Filters trong Skin" },
+        { "id": "7.10", "file": "7.10_Mo-rong-tour-bang-JavaScript-API.md",                    "title": "7.10 – Mở rộng tour bằng JavaScript API" },
+        { "id": "7.11", "file": "7.11_Web-Element-PDF-Hotspot-va-Custom-Properties.md",        "title": "7.11 – Web Element, PDF Hotspot & Custom Properties" },
+        { "id": "7.12", "file": "7.12_Components-Toolbox-va-cap-nhat-Skin-7.1.md",             "title": "7.12 – Components, Toolbox và cập nhật Skin 7.1" }
+      ]
+    }
+  ]
+}

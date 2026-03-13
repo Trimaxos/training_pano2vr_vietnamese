@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tài liệu Training Pano2VR</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header id="site-header">
+    <button id="menu-toggle" aria-label="Mở menu">&#9776;</button>
+    <div id="site-title">
+      <span class="site-logo">&#127759;</span>
+      <span>Pano2VR Training</span>
+    </div>
+    <input type="search" id="search-box" placeholder="&#128269; Tìm bài học..." aria-label="Tìm kiếm bài học">
+  </header>
+
+  <!-- SIDEBAR -->
+  <nav id="sidebar" aria-label="Danh sách bài học">
+    <div id="nav-list">
+      <p class="nav-loading">Đang tải danh sách...</p>
+    </div>
+  </nav>
+
+  <!-- OVERLAY (mobile) -->
+  <div id="overlay" aria-hidden="true"></div>
+
+  <!-- MAIN CONTENT -->
+  <main id="content-area">
+
+    <!-- WELCOME SCREEN -->
+    <div id="welcome">
+      <div class="welcome-inner">
+        <div class="welcome-icon">&#127759;</div>
+        <h2>Chào mừng đến với tài liệu training Pano2VR</h2>
+        <p>Bộ tài liệu gồm <strong>50 bài học</strong> chia thành 7 phần, từ cơ bản đến nâng cao.</p>
+        <p>Chọn một bài học từ menu bên trái để bắt đầu.</p>
+        <div class="welcome-stats">
+          <div class="stat"><span class="stat-num">7</span><span class="stat-label">Phần học</span></div>
+          <div class="stat"><span class="stat-num">50</span><span class="stat-label">Bài học</span></div>
+          <div class="stat"><span class="stat-num">7.1</span><span class="stat-label">Pano2VR</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LESSON HEADER -->
+    <div id="lesson-header" hidden>
+      <div id="lesson-meta">
+        <span id="meta-time" class="meta-tag"></span>
+        <span id="meta-prereqs" class="meta-tag"></span>
+        <span id="meta-version" class="meta-tag"></span>
+      </div>
+    </div>
+
+    <!-- LESSON BODY -->
+    <article id="lesson-body" hidden></article>
+
+    <!-- PREV / NEXT NAV -->
+    <nav id="lesson-nav" hidden aria-label="Điều hướng bài học">
+      <button id="btn-prev" disabled>&#8592; Bài trước</button>
+      <span id="lesson-progress"></span>
+      <button id="btn-next" disabled>Bài tiếp theo &#8594;</button>
+    </nav>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
