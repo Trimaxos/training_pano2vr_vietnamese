@@ -1,19 +1,26 @@
 /* =====================================================
    Pano2VR Training – app.js
-   Fetch markdown từ GitHub, parse frontmatter, render nội dung
+   Fetch markdown từ GitHub, parse, render, navigation
    ===================================================== */
 
 var REPO_BASE = 'https://raw.githubusercontent.com/Trimaxos/training_pano2vr_vietnamese/master/';
 var MAP_URL   = 'content-map.json';
 
-var contentMap        = null;   // dữ liệu từ content-map.json
-var flatLessons       = [];     // mảng phẳng tất cả bài học cho prev/next
-var currentLessonIdx  = -1;     // vị trí hiện tại trong flatLessons
+var contentMap       = null;
+var flatLessons      = [];      // [{section, lesson, globalIdx}]
+var currentIdx       = -1;
+
+/* Màu badge theo index section */
+var SECTION_COLORS = ['#6366f1','#ff6b6b','#16a34a','#0284c7','#d97706','#7c3aed','#059669'];
 
 /* =====================================================
    KHỞI ĐỘNG
    ===================================================== */
 window.addEventListener('DOMContentLoaded', function () {
+  /* Cấu hình marked */
+  marked.setOptions({ breaks: true, gfm: true });
+
+  /* Tải danh sách bài học, luôn fetch fresh (không cache) */
   fetch(MAP_URL + '?t=' + Date.now())
     .then(function (r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -27,28 +34,33 @@ window.addEventListener('DOMContentLoaded', function () {
     })
     .catch(function (err) {
       document.getElementById('nav-list').innerHTML =
-        '<p class="nav-loading" style="color:#f87">Không thể tải danh sách bài học.<br>' + err.message + '</p>';
+        '<p style="color:#f87;padding:16px;font-size:.85rem;">Không thể tải danh sách bài học.<br>' + err.message + '</p>';
     });
 
-  // Hỗ trợ nút back/forward của trình duyệt
+  /* Nút back/forward browser */
   window.addEventListener('popstate', loadFromHash);
 
-  // Mobile: menu toggle
+  /* Mobile: toggle sidebar */
   document.getElementById('menu-toggle').addEventListener('click', toggleSidebar);
   document.getElementById('overlay').addEventListener('click', closeSidebar);
 
-  // Tìm kiếm
-  document.getElementById('search-box').addEventListener('input', handleSearch);
+  /* Search */
+  var searchBox = document.getElementById('search-box');
+  searchBox.addEventListener('input', handleSearch);
+  searchBox.addEventListener('keydown', handleSearchKey);
+  searchBox.addEventListener('blur', function () {
+    setTimeout(closeSuggestions, 150);
+  });
 });
 
 /* =====================================================
-   XÂY DỰNG MẢNG PHẲNG (cho prev/next)
+   MẢNG PHẲNG cho prev/next
    ===================================================== */
 function buildFlatIndex() {
   flatLessons = [];
-  contentMap.sections.forEach(function (section) {
+  contentMap.sections.forEach(function (section, sIdx) {
     section.lessons.forEach(function (lesson) {
-      flatLessons.push({ section: section, lesson: lesson });
+      flatLessons.push({ section: section, lesson: lesson, sectionIdx: sIdx });
     });
   });
 }
@@ -62,28 +74,27 @@ function buildSidebar() {
 
   contentMap.sections.forEach(function (section, idx) {
     var details = document.createElement('details');
-    if (idx === 0) details.setAttribute('open', ''); // mở phần đầu mặc định
+    if (idx === 0) details.setAttribute('open', '');
 
     var summary = document.createElement('summary');
-    summary.textContent = section.title;
+    /* Arrow icon */
+    var arrowSvg = '<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>';
+    summary.innerHTML = arrowSvg + escapeHtml(section.title);
     details.appendChild(summary);
 
     var ul = document.createElement('ul');
-
     section.lessons.forEach(function (lesson) {
       var li = document.createElement('li');
       var a  = document.createElement('a');
       a.href             = '#' + lesson.id;
       a.textContent      = lesson.title;
       a.dataset.lessonId = lesson.id;
-
       a.addEventListener('click', function (e) {
         e.preventDefault();
         history.pushState(null, '', '#' + lesson.id);
-        loadLesson(section, lesson);
+        loadLesson(lesson.id);
         closeSidebar();
       });
-
       li.appendChild(a);
       ul.appendChild(li);
     });
@@ -94,241 +105,372 @@ function buildSidebar() {
 }
 
 /* =====================================================
-   TẢI BÀI HỌC TỪ GITHUB
+   TẢI BÀI HỌC
    ===================================================== */
-function loadLesson(section, lesson) {
+function loadLesson(lessonId) {
+  /* Tìm bài trong flatLessons */
+  var entry = null;
+  for (var i = 0; i < flatLessons.length; i++) {
+    if (flatLessons[i].lesson.id === lessonId) { entry = flatLessons[i]; currentIdx = i; break; }
+  }
+  if (!entry) return;
+
+  var section = entry.section;
+  var lesson  = entry.lesson;
+
+  /* Ẩn welcome, hiện lesson-view */
+  document.getElementById('welcome').hidden     = true;
+  document.getElementById('lesson-view').hidden = false;
+
+  /* Loading state */
+  document.getElementById('lesson-body').innerHTML   = '<p class="loading-msg">Đang tải bài học...</p>';
+  document.getElementById('meta-bar').innerHTML      = '';
+  document.getElementById('related-section').innerHTML  = '';
+  document.getElementById('comments-section').innerHTML = '';
+
+  /* Cuộn lên đầu ngay lập tức */
+  document.getElementById('scroll-area').scrollTop = 0;
+
+  /* Update sidebar + bottom nav ngay (không chờ fetch) */
+  updateActiveLink(lessonId);
+  renderBottomNav();
+
+  /* Fetch markdown từ GitHub */
   var url = REPO_BASE + section.folder + '/' + lesson.file + '?t=' + Date.now();
-
-  // Ẩn welcome, hiện lesson layout
-  document.getElementById('welcome').hidden       = true;
-  document.getElementById('lesson-header').hidden = false;
-  document.getElementById('lesson-body').hidden   = false;
-  document.getElementById('lesson-nav').hidden    = false;
-
-  // Trạng thái loading
-  var body = document.getElementById('lesson-body');
-  body.innerHTML = '<p class="loading-msg">&#8987; Đang tải bài học...</p>';
-
-  // Xoá meta cũ
-  clearMeta();
-
   fetch(url)
     .then(function (r) {
-      if (!r.ok) throw new Error('HTTP ' + r.status + ' – ' + url);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.text();
     })
     .then(function (rawText) {
       var parsed = parseFrontmatter(rawText);
-      renderMeta(parsed.meta);
-      body.innerHTML = marked.parse(parsed.body);
-      updateActiveLink(lesson.id);
-      updatePrevNext(lesson.id);
-      // Cuộn lên đầu nội dung
-      document.getElementById('content-area').scrollTop = 0;
-      // Cập nhật tiêu đề tab
+      renderMetaBar(parsed.meta);
+      document.getElementById('lesson-body').innerHTML = marked.parse(parsed.body);
+      renderRelated(entry);
+      renderComments();
       document.title = lesson.title + ' – Pano2VR Training';
     })
     .catch(function (err) {
-      body.innerHTML = '<p class="error-msg">&#10060; Không thể tải bài học.<br><small>' + err.message + '</small></p>';
+      document.getElementById('lesson-body').innerHTML =
+        '<p class="error-msg">Không thể tải bài học.<br><small>' + err.message + '</small></p>';
     });
 }
 
 /* =====================================================
    PARSE YAML FRONTMATTER
-   Trích xuất: title, time_estimate, version, last_update, prerequisites
    ===================================================== */
 function parseFrontmatter(text) {
-  var meta = {};
-  var body = text;
+  var meta = {}, body = text;
+  var m = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
+  if (!m) return { meta: meta, body: body };
 
-  var match = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
-  if (!match) return { meta: meta, body: body };
+  var yaml = m[1];
+  body = m[2];
 
-  var yaml = match[1];
-  body = match[2];
+  var pick = function (key) {
+    var r = yaml.match(new RegExp('^' + key + ':\\s*["\']?(.+?)["\']?\\s*$', 'm'));
+    return r ? r[1] : null;
+  };
 
-  // title
-  var m = yaml.match(/^title:\s*["']?(.+?)["']?\s*$/m);
-  if (m) meta.title = m[1];
+  meta.title         = pick('title');
+  meta.time_estimate = pick('time_estimate');
+  meta.version       = pick('version');
+  meta.last_update   = pick('last_update');
 
-  // time_estimate
-  m = yaml.match(/^time_estimate:\s*["']?(.+?)["']?\s*$/m);
-  if (m) meta.time_estimate = m[1];
-
-  // version
-  m = yaml.match(/^version:\s*["']?(.+?)["']?\s*$/m);
-  if (m) meta.version = m[1];
-
-  // last_update
-  m = yaml.match(/^last_update:\s*["']?(.+?)["']?\s*$/m);
-  if (m) meta.last_update = m[1];
-
-  // prerequisites (YAML list: - "item")
   var prereqBlock = yaml.match(/^prerequisites:\s*\r?\n((?:[ \t]*-[ \t]*.+\r?\n?)*)/m);
   if (prereqBlock) {
     meta.prerequisites = prereqBlock[1]
       .split(/\r?\n/)
       .filter(function (l) { return /^\s*-/.test(l); })
       .map(function (l) { return l.replace(/^\s*-\s*["']?/, '').replace(/["']?\s*$/, ''); })
-      .filter(function (s) { return s.length > 0; });
+      .filter(Boolean);
   }
 
   return { meta: meta, body: body };
 }
 
 /* =====================================================
-   HIỂN THỊ META BAR
+   META BAR
    ===================================================== */
-function renderMeta(meta) {
-  var timeEl   = document.getElementById('meta-time');
-  var prereqEl = document.getElementById('meta-prereqs');
-  var verEl    = document.getElementById('meta-version');
+function renderMetaBar(meta) {
+  var bar = document.getElementById('meta-bar');
+  var html = '';
 
-  timeEl.textContent = meta.time_estimate ? '⏱ ' + meta.time_estimate : '';
-
-  if (meta.prerequisites && meta.prerequisites.length > 0) {
-    prereqEl.textContent = '📋 Yêu cầu: ' + meta.prerequisites.join(', ');
-  } else {
-    prereqEl.textContent = '';
+  if (meta.time_estimate) {
+    html += badge('meta-time',
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+      escapeHtml(meta.time_estimate));
   }
-
+  if (meta.prerequisites && meta.prerequisites.length) {
+    html += badge('meta-prereq',
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+      'Yêu cầu: ' + escapeHtml(meta.prerequisites.join(', ')));
+  }
   if (meta.version) {
-    verEl.textContent = '📦 ' + meta.version;
-  } else {
-    verEl.textContent = '';
+    html += badge('meta-ver',
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>',
+      escapeHtml(meta.version));
   }
+
+  bar.innerHTML = html;
 }
 
-function clearMeta() {
-  document.getElementById('meta-time').textContent   = '';
-  document.getElementById('meta-prereqs').textContent = '';
-  document.getElementById('meta-version').textContent = '';
+function badge(cls, svgHtml, text) {
+  return '<span class="meta-badge ' + cls + '">' + svgHtml + text + '</span>';
 }
 
 /* =====================================================
-   PREV / NEXT NAVIGATION
+   RELATED LESSONS
    ===================================================== */
-function updatePrevNext(lessonId) {
-  var idx = -1;
-  for (var i = 0; i < flatLessons.length; i++) {
-    if (flatLessons[i].lesson.id === lessonId) { idx = i; break; }
-  }
-  currentLessonIdx = idx;
+function renderRelated(currentEntry) {
+  var section = currentEntry.section;
+  var lesson  = currentEntry.lesson;
+  var sIdx    = currentEntry.sectionIdx;
 
+  /* Lấy các bài cùng section (trừ bài hiện tại) */
+  var siblings = section.lessons.filter(function (l) { return l.id !== lesson.id; });
+  /* Ưu tiên lấy 2 bài liền kề trước/sau, nếu không đủ lấy ngẫu nhiên */
+  var lessonPos = section.lessons.indexOf(lesson);
+  var picks = [];
+  if (lessonPos > 0) picks.push(section.lessons[lessonPos - 1]);
+  if (lessonPos < section.lessons.length - 1) picks.push(section.lessons[lessonPos + 1]);
+  /* Bổ sung từ section khác nếu chưa đủ 3 */
+  if (picks.length < 3 && flatLessons.length > section.lessons.length) {
+    for (var i = 0; i < flatLessons.length && picks.length < 3; i++) {
+      var e = flatLessons[i];
+      if (e.lesson.id !== lesson.id && picks.indexOf(e.lesson) === -1) {
+        if (e.sectionIdx !== sIdx) picks.push(e.lesson);
+      }
+    }
+  }
+  picks = picks.slice(0, 3);
+  if (!picks.length) { document.getElementById('related-section').innerHTML = ''; return; }
+
+  var color = SECTION_COLORS[sIdx % SECTION_COLORS.length];
+  var sectionLabel = section.title.split('–')[0].trim(); /* "Phần 1" */
+
+  var cards = picks.map(function (l) {
+    return '<a class="related-card" href="#' + l.id + '" data-lesson-id="' + l.id + '">'
+      + '<span class="rc-tag rc-color-' + (sIdx % 7) + '">' + escapeHtml(sectionLabel) + '</span>'
+      + '<div class="rc-title">' + escapeHtml(l.title) + '</div>'
+      + '</a>';
+  }).join('');
+
+  document.getElementById('related-section').innerHTML =
+    '<div class="section-title">'
+    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>'
+    + 'Bài liên quan</div>'
+    + '<div class="related-cards">' + cards + '</div>';
+
+  /* Gắn click event */
+  document.querySelectorAll('#related-section .related-card').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      var id = a.dataset.lessonId;
+      history.pushState(null, '', '#' + id);
+      loadLesson(id);
+    });
+  });
+}
+
+/* =====================================================
+   COMMENTS
+   ===================================================== */
+function renderComments() {
+  var html = '<div class="comments-header">'
+    + '<div class="section-title">'
+    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'
+    + 'Hỏi đáp &amp; Nhận xét</div>'
+    + '</div>'
+    + '<div class="comment-input-wrap">'
+    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>'
+    + '<input type="text" placeholder="Đặt câu hỏi hoặc để lại nhận xét..." />'
+    + '</div>'
+    + '<p class="cmt-empty">Chưa có nhận xét nào. Hãy là người đầu tiên!</p>';
+
+  document.getElementById('comments-section').innerHTML = html;
+}
+
+/* =====================================================
+   BOTTOM NAVIGATION
+   ===================================================== */
+function renderBottomNav() {
   var prevBtn  = document.getElementById('btn-prev');
   var nextBtn  = document.getElementById('btn-next');
   var progress = document.getElementById('lesson-progress');
+  var idx = currentIdx;
 
   prevBtn.disabled = (idx <= 0);
   nextBtn.disabled = (idx >= flatLessons.length - 1);
-
-  progress.textContent = (idx >= 0)
-    ? (idx + 1) + ' / ' + flatLessons.length
-    : '';
+  progress.textContent = (idx >= 0) ? (idx + 1) + ' / ' + flatLessons.length : '';
 
   prevBtn.onclick = function () {
     if (idx > 0) {
       var prev = flatLessons[idx - 1];
       history.pushState(null, '', '#' + prev.lesson.id);
-      loadLesson(prev.section, prev.lesson);
+      loadLesson(prev.lesson.id);
     }
   };
-
   nextBtn.onclick = function () {
     if (idx < flatLessons.length - 1) {
       var next = flatLessons[idx + 1];
       history.pushState(null, '', '#' + next.lesson.id);
-      loadLesson(next.section, next.lesson);
+      loadLesson(next.lesson.id);
     }
   };
 }
 
 /* =====================================================
-   HIGHLIGHT LINK ĐANG ACTIVE
+   ACTIVE LINK + AUTO-EXPAND SECTION
    ===================================================== */
 function updateActiveLink(lessonId) {
   document.querySelectorAll('#nav-list a').forEach(function (a) {
     a.classList.remove('active');
   });
-
   var active = document.querySelector('#nav-list a[data-lesson-id="' + lessonId + '"]');
   if (active) {
     active.classList.add('active');
-    // Đảm bảo phần chứa bài đang mở được expand
     var details = active.closest('details');
     if (details) details.setAttribute('open', '');
+    /* Cuộn sidebar để active item visible */
+    active.scrollIntoView({ block: 'nearest' });
   }
 }
 
 /* =====================================================
-   LOAD BÀI HỌC TỪ URL HASH (deep link)
+   LOAD TỪ URL HASH (deep link / back-forward)
    ===================================================== */
 function loadFromHash() {
   var hash = window.location.hash.replace('#', '').trim();
-  if (!hash) {
-    // Không có hash → hiển thị màn hình chào
-    showWelcome();
-    return;
-  }
-
-  // Tìm bài học khớp với hash
+  if (!hash) { showWelcome(); return; }
   for (var i = 0; i < flatLessons.length; i++) {
     if (flatLessons[i].lesson.id === hash) {
-      loadLesson(flatLessons[i].section, flatLessons[i].lesson);
+      loadLesson(hash);
       return;
     }
   }
+  showWelcome();
 }
 
 function showWelcome() {
-  document.getElementById('welcome').hidden       = false;
-  document.getElementById('lesson-header').hidden = true;
-  document.getElementById('lesson-body').hidden   = true;
-  document.getElementById('lesson-nav').hidden    = true;
-  document.querySelectorAll('#nav-list a').forEach(function (a) {
-    a.classList.remove('active');
-  });
-  document.title = 'Tài liệu Training Pano2VR';
+  document.getElementById('lesson-view').hidden = true;
+  document.getElementById('welcome').hidden     = false;
+  document.querySelectorAll('#nav-list a').forEach(function (a) { a.classList.remove('active'); });
+  document.title = 'Pano2VR Training';
 }
 
 /* =====================================================
-   TÌM KIẾM – lọc tiêu đề trong sidebar
+   SEARCH AUTO-SUGGEST
    ===================================================== */
+var suggestFocusIdx = -1;
+
 function handleSearch(e) {
   var query = e.target.value.trim().toLowerCase();
+  var box   = document.getElementById('search-suggestions');
 
-  document.querySelectorAll('#nav-list a').forEach(function (a) {
-    var text = a.textContent.toLowerCase();
-    var li   = a.parentElement;
-    li.style.display = (!query || text.includes(query)) ? '' : 'none';
-  });
+  if (!query || !flatLessons.length) { closeSuggestions(); return; }
 
-  document.querySelectorAll('#nav-list details').forEach(function (details) {
-    var anyVisible = Array.from(details.querySelectorAll('li')).some(function (li) {
-      return li.style.display !== 'none';
+  var matches = flatLessons.filter(function (entry) {
+    return entry.lesson.title.toLowerCase().includes(query)
+        || entry.section.title.toLowerCase().includes(query);
+  }).slice(0, 8);
+
+  if (!matches.length) {
+    box.innerHTML = '<div class="suggest-empty">Không tìm thấy bài học phù hợp</div>';
+    box.classList.add('open');
+    suggestFocusIdx = -1;
+    return;
+  }
+
+  box.innerHTML = matches.map(function (entry, i) {
+    var tag   = entry.section.title.split('–')[0].trim();
+    var title = highlightMatch(entry.lesson.title, query);
+    return '<div class="suggest-item" data-lesson-id="' + entry.lesson.id + '" data-idx="' + i + '">'
+      + '<span class="suggest-tag">' + escapeHtml(tag) + '</span>'
+      + '<span class="suggest-title">' + title + '</span>'
+      + '</div>';
+  }).join('');
+
+  /* Click trên item */
+  box.querySelectorAll('.suggest-item').forEach(function (item) {
+    item.addEventListener('mousedown', function () {
+      var id = item.dataset.lessonId;
+      history.pushState(null, '', '#' + id);
+      loadLesson(id);
+      document.getElementById('search-box').value = '';
+      closeSuggestions();
     });
-    details.style.display = anyVisible ? '' : 'none';
-    // Mở rộng tất cả khi đang tìm kiếm
-    if (query) details.setAttribute('open', '');
   });
+
+  box.classList.add('open');
+  suggestFocusIdx = -1;
+}
+
+function handleSearchKey(e) {
+  var box = document.getElementById('search-suggestions');
+  if (!box.classList.contains('open')) return;
+  var items = box.querySelectorAll('.suggest-item');
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    suggestFocusIdx = Math.min(suggestFocusIdx + 1, items.length - 1);
+    updateSuggestFocus(items);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    suggestFocusIdx = Math.max(suggestFocusIdx - 1, 0);
+    updateSuggestFocus(items);
+  } else if (e.key === 'Enter') {
+    if (suggestFocusIdx >= 0 && items[suggestFocusIdx]) {
+      var id = items[suggestFocusIdx].dataset.lessonId;
+      history.pushState(null, '', '#' + id);
+      loadLesson(id);
+      document.getElementById('search-box').value = '';
+      closeSuggestions();
+    }
+  } else if (e.key === 'Escape') {
+    closeSuggestions();
+  }
+}
+
+function updateSuggestFocus(items) {
+  items.forEach(function (item, i) {
+    item.classList.toggle('focused', i === suggestFocusIdx);
+  });
+  if (items[suggestFocusIdx]) items[suggestFocusIdx].scrollIntoView({ block: 'nearest' });
+}
+
+function closeSuggestions() {
+  var box = document.getElementById('search-suggestions');
+  box.classList.remove('open');
+  suggestFocusIdx = -1;
+}
+
+function highlightMatch(text, query) {
+  var escaped = escapeHtml(text);
+  var escapedQ = escapeHtml(query).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return escaped.replace(new RegExp('(' + escapedQ + ')', 'gi'), '<mark>$1</mark>');
 }
 
 /* =====================================================
    MOBILE SIDEBAR
    ===================================================== */
 function toggleSidebar() {
-  var sidebar = document.getElementById('sidebar');
-  var overlay = document.getElementById('overlay');
-  var isOpen  = sidebar.classList.contains('open');
-  if (isOpen) {
-    closeSidebar();
-  } else {
-    sidebar.classList.add('open');
-    overlay.classList.add('visible');
-  }
+  var open = document.getElementById('sidebar').classList.contains('open');
+  open ? closeSidebar() : openSidebar();
 }
-
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('overlay').classList.add('visible');
+}
 function closeSidebar() {
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('overlay').classList.remove('visible');
+}
+
+/* =====================================================
+   UTILS
+   ===================================================== */
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }

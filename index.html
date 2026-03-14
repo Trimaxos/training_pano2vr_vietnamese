@@ -1,72 +1,113 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tài liệu Training Pano2VR</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pano2VR Training</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- HEADER -->
+  <!-- ===== HEADER ===== -->
   <header id="site-header">
-    <button id="menu-toggle" aria-label="Mở menu">&#9776;</button>
+    <button id="menu-toggle" aria-label="Mở/đóng menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+
     <div id="site-title">
-      <span class="site-logo">&#127759;</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="2" y1="12" x2="22" y2="12"/>
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+      </svg>
       <span>Pano2VR Training</span>
     </div>
-    <input type="search" id="search-box" placeholder="&#128269; Tìm bài học..." aria-label="Tìm kiếm bài học">
+
+    <div id="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" id="search-box" placeholder="Tìm bài học..." autocomplete="off" spellcheck="false" />
+      <div id="search-suggestions" role="listbox"></div>
+    </div>
   </header>
 
-  <!-- SIDEBAR -->
-  <nav id="sidebar" aria-label="Danh sách bài học">
-    <div id="nav-list">
-      <p class="nav-loading">Đang tải danh sách...</p>
-    </div>
-  </nav>
+  <!-- ===== LAYOUT ===== -->
+  <div id="layout">
 
-  <!-- OVERLAY (mobile) -->
-  <div id="overlay" aria-hidden="true"></div>
+    <!-- SIDEBAR -->
+    <aside id="sidebar" aria-label="Menu bài học">
+      <div class="sidebar-label">Nội dung khoá học</div>
+      <nav id="nav-list"></nav>
+    </aside>
 
-  <!-- MAIN CONTENT -->
-  <main id="content-area">
+    <!-- CONTENT -->
+    <main id="content-area">
 
-    <!-- WELCOME SCREEN -->
-    <div id="welcome">
-      <div class="welcome-inner">
-        <div class="welcome-icon">&#127759;</div>
-        <h2>Chào mừng đến với tài liệu training Pano2VR</h2>
-        <p>Bộ tài liệu gồm <strong>50 bài học</strong> chia thành 7 phần, từ cơ bản đến nâng cao.</p>
-        <p>Chọn một bài học từ menu bên trái để bắt đầu.</p>
-        <div class="welcome-stats">
-          <div class="stat"><span class="stat-num">7</span><span class="stat-label">Phần học</span></div>
-          <div class="stat"><span class="stat-num">50</span><span class="stat-label">Bài học</span></div>
-          <div class="stat"><span class="stat-num">7.1</span><span class="stat-label">Pano2VR</span></div>
+      <!-- WELCOME (hiển thị khi chưa chọn bài) -->
+      <div id="welcome">
+        <div class="welcome-inner">
+          <div class="welcome-globe">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+          </div>
+          <h1>Chào mừng đến với Pano2VR Training</h1>
+          <p>Bộ tài liệu tiếng Việt đầy đủ về phần mềm tạo VR Tour Pano2VR 7.1.<br/>Chọn một bài học từ menu bên trái để bắt đầu.</p>
+          <div class="welcome-stats">
+            <div class="stat"><span class="stat-num">7</span><span class="stat-label">Phần học</span></div>
+            <div class="stat"><span class="stat-num">50</span><span class="stat-label">Bài học</span></div>
+            <div class="stat"><span class="stat-num">7.1</span><span class="stat-label">Pano2VR</span></div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- LESSON HEADER -->
-    <div id="lesson-header" hidden>
-      <div id="lesson-meta">
-        <span id="meta-time" class="meta-tag"></span>
-        <span id="meta-prereqs" class="meta-tag"></span>
-        <span id="meta-version" class="meta-tag"></span>
-      </div>
-    </div>
+      <!-- LESSON VIEW (hiển thị khi chọn bài) -->
+      <div id="lesson-view" hidden>
 
-    <!-- LESSON BODY -->
-    <article id="lesson-body" hidden></article>
+        <!-- Meta bar -->
+        <div id="meta-bar"></div>
 
-    <!-- PREV / NEXT NAV -->
-    <nav id="lesson-nav" hidden aria-label="Điều hướng bài học">
-      <button id="btn-prev" disabled>&#8592; Bài trước</button>
-      <span id="lesson-progress"></span>
-      <button id="btn-next" disabled>Bài tiếp theo &#8594;</button>
-    </nav>
+        <!-- Scrollable content -->
+        <div id="scroll-area">
+          <article id="lesson-body"></article>
+          <div id="related-section"></div>
+          <div id="comments-section"></div>
+          <div class="scroll-spacer"></div>
+        </div>
 
-  </main>
+        <!-- Bottom navigation -->
+        <nav id="lesson-nav" aria-label="Điều hướng bài học">
+          <button id="btn-prev">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+            Bài trước
+          </button>
+          <span id="lesson-progress"></span>
+          <button id="btn-next" class="btn-next">
+            Bài tiếp theo
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+        </nav>
+
+      </div><!-- /lesson-view -->
+
+    </main>
+  </div><!-- /layout -->
+
+  <!-- MOBILE OVERLAY -->
+  <div id="overlay" aria-hidden="true"></div>
 
   <script src="app.js"></script>
 </body>
