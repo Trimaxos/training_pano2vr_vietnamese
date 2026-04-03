@@ -97,7 +97,7 @@
         { "id": "7.10", "file": "7.10_Mo-rong-tour-bang-JavaScript-API.md",                    "title": "7.10 – Mở rộng tour bằng JavaScript API" },
         { "id": "7.11", "file": "7.11_Web-Element-PDF-Hotspot-va-Custom-Properties.md",        "title": "7.11 – Web Element, PDF Hotspot & Custom Properties" },
         { "id": "7.12", "file": "7.12_Components-Toolbox-va-cap-nhat-Skin-7.1.md",             "title": "7.12 – Components, Toolbox và cập nhật Skin 7.1" },
-        { "id": "7.13", "file": "7.13_Direct Node Access.md",                                  "title": "7.13 – Components, Toolbox và cập nhật Skin 7.1" }
+        { "id": "7.13", "file": "7.13_Direct_Node_Access.md",                                  "title": "7.13 – Components, direct node" }
       ]
     }
   ]
